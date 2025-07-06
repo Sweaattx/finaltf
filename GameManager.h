@@ -1,21 +1,5 @@
 #pragma once
-#include <Windows.h>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-#include <random>
-#include <ctime>
-
-using namespace System;
-using namespace System::ComponentModel;
-using namespace System::Collections;
-using namespace System::Windows::Forms;
-using namespace System::Data;
-using namespace System::Drawing;
-using namespace System::Drawing::Imaging;
-using namespace System::IO;
+#include "stdafx.h"
 
 // Enumeraciones para el juego
 public enum class GameState {
@@ -27,6 +11,11 @@ public enum class GameState {
     Victory,
     Ranking
 };
+
+// Constantes del HUD
+#define HUD_HEIGHT 200
+#define GAME_AREA_TOP HUD_HEIGHT
+#define GAME_AREA_HEIGHT (600 - HUD_HEIGHT)
 
 public enum class Direction {
     Down = 0,
@@ -305,7 +294,7 @@ public:
         if (newX >= 0 && newX <= 800 - width) {
             x = newX;
         }
-        if (newY >= 0 && newY <= 600 - height) {
+        if (newY >= GAME_AREA_TOP && newY <= 600 - height) {
             y = newY;
         }
     }
@@ -495,7 +484,7 @@ public:
             else if (direccion == Direction::Right) direccion = Direction::Left;
         }
         
-        if (newY >= 0 && newY <= 600 - height) {
+        if (newY >= GAME_AREA_TOP && newY <= 600 - height) {
             if (Math::Abs(newY - y) > 0.01f) wasMoving = true; // CORRECCION: Verificar movimiento real
             y = newY;
         } else {
@@ -587,6 +576,14 @@ public:
         baseY = posY;
     }
     
+    property ResourceType Type {
+        ResourceType get() { return tipo; }
+    }
+    
+    property int Mundo {
+        int get() { return mundo; }
+    }
+    
     virtual void Update() override {
         if (!active) return;
         
@@ -613,9 +610,6 @@ public:
         g->FillEllipse(brush, x, y, width, height);
         delete brush;
     }
-    
-    property ResourceType Tipo { ResourceType get() { return tipo; } }
-    property int Mundo { int get() { return mundo; } }
 };
 
 // Clase World
@@ -661,7 +655,8 @@ public:
     
     void Draw(Graphics^ g) {
         if (background != nullptr) {
-            g->DrawImage(background, 0, 0, 800, 600);
+            // Dibujar fondo en el area de juego, no en toda la pantalla
+            g->DrawImage(background, 0, GAME_AREA_TOP, 800, GAME_AREA_HEIGHT);
         }
         
         // Dibujar construcciones en mundo 3
@@ -736,6 +731,21 @@ private:
     // Recursos de fondo
     Bitmap^ menuBackground;
     
+    // Iconos del HUD
+    Bitmap^ iconoCorazon;
+    Bitmap^ iconoReloj;
+    Bitmap^ iconoCohete;
+    Bitmap^ iconoMundo1;
+    Bitmap^ iconoMundo2;
+    Bitmap^ iconoMundo3;
+    
+    // Iconos de recursos para inventario
+    Bitmap^ iconoRecursoEmpatia;
+    Bitmap^ iconoRecursoSabiduria;
+    Bitmap^ iconoRecursoValor;
+    Bitmap^ iconoRecursoEsperanza;
+    Bitmap^ iconoRecursoEquilibrio;
+    
     // Ranking
     System::Collections::Generic::List<ScoreEntry^>^ ranking;
     
@@ -789,6 +799,35 @@ private:
             delete g;
         }
         
+        // Cargar iconos del HUD
+        try {
+            iconoCorazon = gcnew Bitmap("recursos/corazon.png");
+            iconoReloj = gcnew Bitmap("recursos/reloj.png");
+            iconoCohete = gcnew Bitmap("recursos/cohete.png");
+            iconoMundo1 = gcnew Bitmap("recursos/icono_mundo1.png");
+            iconoMundo2 = gcnew Bitmap("recursos/icono_mundo2.png");
+            iconoMundo3 = gcnew Bitmap("recursos/icono_mundo3.png");
+            iconoRecursoEmpatia = gcnew Bitmap("recursos/recurso_empatia.png");
+            iconoRecursoSabiduria = gcnew Bitmap("recursos/recurso_sabiduria.png");
+            iconoRecursoValor = gcnew Bitmap("recursos/recurso_valor.png");
+            iconoRecursoEsperanza = gcnew Bitmap("recursos/recurso_esperanza.png");
+            iconoRecursoEquilibrio = gcnew Bitmap("recursos/recurso_equilibrio.png");
+        }
+        catch (Exception^ e) {
+            // En caso de error, crear iconos por defecto
+            iconoCorazon = gcnew Bitmap(32, 32);
+            iconoReloj = gcnew Bitmap(32, 32);
+            iconoCohete = gcnew Bitmap(32, 32);
+            iconoMundo1 = gcnew Bitmap(32, 32);
+            iconoMundo2 = gcnew Bitmap(32, 32);
+            iconoMundo3 = gcnew Bitmap(32, 32);
+            iconoRecursoEmpatia = gcnew Bitmap(24, 24);
+            iconoRecursoSabiduria = gcnew Bitmap(24, 24);
+            iconoRecursoValor = gcnew Bitmap(24, 24);
+            iconoRecursoEsperanza = gcnew Bitmap(24, 24);
+            iconoRecursoEquilibrio = gcnew Bitmap(24, 24);
+        }
+        
         enemies = gcnew System::Collections::Generic::List<Enemy^>();
         resources = gcnew System::Collections::Generic::List<Resource^>();
         ranking = gcnew System::Collections::Generic::List<ScoreEntry^>();
@@ -840,7 +879,7 @@ private:
     
 public:
     void StartGame() {
-        player = gcnew Player(400, 300, velocidad, vidas);
+        player = gcnew Player(400, 300 + GAME_AREA_TOP, velocidad, vidas);
         puntuacion = 0;
         tiempoRestante = tiempo * 60; // Convertir a frames (60 FPS)
         
@@ -860,8 +899,8 @@ public:
         
         // Crear enemigos del mundo 1 en posiciones alejadas del player
         // Player esta en (400, 300), asi que colocar enemigos lejos
-        Enemy^ enemy1 = gcnew Enemy(50, 50, (EnemyType)0, 1, player);    // Esquina superior izquierda
-        Enemy^ enemy2 = gcnew Enemy(700, 100, (EnemyType)1, 1, player);  // Esquina superior derecha
+        Enemy^ enemy1 = gcnew Enemy(50, 50 + GAME_AREA_TOP, (EnemyType)0, 1, player);    // Esquina superior izquierda
+        Enemy^ enemy2 = gcnew Enemy(700, 100 + GAME_AREA_TOP, (EnemyType)1, 1, player);  // Esquina superior derecha
         Enemy^ enemy3 = gcnew Enemy(100, 500, (EnemyType)2, 1, player);  // Esquina inferior izquierda
         
         enemies->Add(enemy1);
@@ -874,7 +913,7 @@ public:
             for (int j = 0; j < 4; j++) { // 4 de cada tipo = 12 recursos totales
                 Resource^ resource = gcnew Resource(
                     random->Next(50, 750),
-                    random->Next(50, 550),
+                    random->Next(50 + GAME_AREA_TOP, 550),
                     (ResourceType)i,
                     1
                 );
@@ -892,8 +931,8 @@ public:
         resources->Clear();
         
         // Crear enemigos del mundo 2 en posiciones alejadas del player
-        Enemy^ enemy1 = gcnew Enemy(60, 80, (EnemyType)0, 2, player);    // Esquina superior izquierda
-        Enemy^ enemy2 = gcnew Enemy(720, 120, (EnemyType)1, 2, player);  // Esquina superior derecha
+        Enemy^ enemy1 = gcnew Enemy(60, 80 + GAME_AREA_TOP, (EnemyType)0, 2, player);    // Esquina superior izquierda
+        Enemy^ enemy2 = gcnew Enemy(720, 120 + GAME_AREA_TOP, (EnemyType)1, 2, player);  // Esquina superior derecha
         Enemy^ enemy3 = gcnew Enemy(120, 520, (EnemyType)2, 2, player);  // Esquina inferior izquierda
         
         enemies->Add(enemy1);
@@ -906,7 +945,7 @@ public:
             for (int j = 0; j < 4; j++) { // 4 de cada tipo = 12 recursos totales
                 Resource^ resource = gcnew Resource(
                     random->Next(50, 750),
-                    random->Next(50, 550),
+                    random->Next(50 + GAME_AREA_TOP, 550),
                     (ResourceType)i,
                     2
                 );
@@ -929,7 +968,7 @@ public:
             for (int j = 0; j < 2; j++) { // 2 de cada tipo = 12 recursos totales
                 Resource^ resource = gcnew Resource(
                     random->Next(50, 750),
-                    random->Next(50, 550),
+                    random->Next(50 + GAME_AREA_TOP, 550),
                     (ResourceType)i,
                     3
                 );
@@ -994,7 +1033,7 @@ private:
             
             // Verificar colision con player
             if (resource->CheckCollision(player)) {
-                player->AddResource(resource->Tipo);
+                player->AddResource(resource->Type);
                 puntuacion += 100;
                 resource->Active = false;
             }
@@ -1078,6 +1117,36 @@ private:
         }
         
         return totalResources - activeResources;
+    }
+    
+    // Funcion para obtener la cantidad recolectada de cada tipo de recurso
+    int GetCollectedResourceCount(ResourceType type) {
+        int currentWorldNum = 0;
+        switch (currentState) {
+            case GameState::World1: currentWorldNum = 1; break;
+            case GameState::World2: currentWorldNum = 2; break;
+            case GameState::World3: currentWorldNum = 3; break;
+            default: return 0;
+        }
+        
+        int totalOfType = 0;
+        int activeOfType = 0;
+        
+        for (int i = 0; i < resources->Count; i++) {
+            if (resources[i]->Mundo == currentWorldNum && resources[i]->Type == type) {
+                totalOfType++;
+                if (resources[i]->Active) {
+                    activeOfType++;
+                }
+            }
+        }
+        
+        return totalOfType - activeOfType;
+    }
+    
+    // Funcion para obtener la puntuacion de cada tipo de recurso
+    int GetResourceScore(ResourceType type) {
+        return GetCollectedResourceCount(type) * 10; // 10 puntos por recurso
     }
     
 public:
@@ -1175,42 +1244,161 @@ private:
     }
     
     void DrawHUD(Graphics^ g) {
-        // Fondo del HUD
-        SolidBrush^ hudBrush = gcnew SolidBrush(Color::FromArgb(128, 0, 0, 0));
-        g->FillRectangle(hudBrush, 0, 0, 800, 50);
+        // Fondo del HUD principal (mas alto para acomodar iconos)
+        SolidBrush^ hudBrush = gcnew SolidBrush(Color::FromArgb(150, 0, 0, 0));
+        g->FillRectangle(hudBrush, 0, 0, 800, 80);
         
-        // Texto del HUD
-        Font^ hudFont = gcnew Font("Arial", 12);
+        // Fondo del inventario
+        SolidBrush^ inventoryBrush = gcnew SolidBrush(Color::FromArgb(120, 50, 50, 50));
+        g->FillRectangle(inventoryBrush, 0, 80, 800, 120);
+        
+        // Fuentes
+        Font^ hudFont = gcnew Font("Arial", 12, FontStyle::Bold);
+        Font^ inventoryFont = gcnew Font("Arial", 10);
         SolidBrush^ textBrush = gcnew SolidBrush(Color::White);
+        SolidBrush^ inventoryTextBrush = gcnew SolidBrush(Color::LightGray);
         
-        // Vidas
-        g->DrawString("Vidas: " + player->Vidas, hudFont, textBrush, 10, 15);
+        // === SECCION PRINCIPAL DEL HUD ===
+        int x = 10;
+        int y = 15;
         
-        // Tiempo
+        // Vidas con corazones
+        for (int i = 0; i < player->Vidas; i++) {
+            g->DrawImage(iconoCorazon, x + (i * 35), y, 30, 30);
+        }
+        g->DrawString("x" + player->Vidas, hudFont, textBrush, x + (player->Vidas * 35), y + 8);
+        
+        // Tiempo con reloj
+        x += 200;
+        g->DrawImage(iconoReloj, x, y, 30, 30);
         int segundos = tiempoRestante / 60;
-        g->DrawString("Tiempo: " + segundos, hudFont, textBrush, 150, 15);
+        g->DrawString(segundos + "s", hudFont, textBrush, x + 35, y + 8);
         
-        // Puntuacion
-        g->DrawString("Puntuacion: " + puntuacion, hudFont, textBrush, 300, 15);
+        // Puntuacion con cohete
+        x += 150;
+        g->DrawImage(iconoCohete, x, y, 30, 30);
+        g->DrawString(puntuacion.ToString(), hudFont, textBrush, x + 35, y + 8);
         
-        // Mundo actual
+        // Mundo actual con icono correspondiente
+        x += 150;
+        Bitmap^ iconoMundoActual = nullptr;
         String^ worldText = "";
         switch (currentState) {
-            case GameState::World1: worldText = "Mundo 1: Humanista"; break;
-            case GameState::World2: worldText = "Mundo 2: Tecnologico"; break;
-            case GameState::World3: worldText = "Mundo 3: Equilibrio"; break;
+            case GameState::World1: 
+                iconoMundoActual = iconoMundo1; 
+                worldText = "Humanista"; 
+                break;
+            case GameState::World2: 
+                iconoMundoActual = iconoMundo2; 
+                worldText = "Tecnologico"; 
+                break;
+            case GameState::World3: 
+                iconoMundoActual = iconoMundo3; 
+                worldText = "Equilibrio"; 
+                break;
         }
-        g->DrawString(worldText, hudFont, textBrush, 500, 15);
         
-        // Progreso de recoleccion
+        if (iconoMundoActual != nullptr) {
+            g->DrawImage(iconoMundoActual, x, y, 30, 30);
+            g->DrawString(worldText, hudFont, textBrush, x + 35, y + 8);
+        }
+        
+        // Progreso general
+        x += 150;
         int totalResources = GetTotalResourcesInCurrentWorld();
         int collectedResources = GetCollectedResourcesInCurrentWorld();
-        g->DrawString("Recursos: " + collectedResources + "/" + totalResources, 
-                     hudFont, textBrush, 650, 15);
+        g->DrawString(collectedResources + "/" + totalResources, hudFont, textBrush, x, y + 8);
         
+        // === INVENTARIO VISUAL ===
+        g->DrawString("INVENTARIO DE RECURSOS:", inventoryFont, inventoryTextBrush, 10, 90);
+        
+        // Configurar posiciones para el inventario
+        int inventoryStartX = 10;
+        int inventoryStartY = 110;
+        int itemWidth = 150;
+        int itemHeight = 80;
+        
+        // Recursos del mundo actual
+        System::Collections::Generic::List<ResourceType>^ currentWorldResources = gcnew System::Collections::Generic::List<ResourceType>();
+        
+        switch (currentState) {
+            case GameState::World1:
+                currentWorldResources->Add(ResourceType::Empatia);
+                currentWorldResources->Add(ResourceType::Etica);
+                break;
+            case GameState::World2:
+                currentWorldResources->Add(ResourceType::Sostenibilidad);
+                currentWorldResources->Add(ResourceType::IA);
+                break;
+            case GameState::World3:
+                currentWorldResources->Add(ResourceType::BigData);
+                currentWorldResources->Add(ResourceType::Automatizacion);
+                break;
+        }
+        
+        // Dibujar items del inventario
+        for (int i = 0; i < currentWorldResources->Count; i++) {
+            ResourceType type = currentWorldResources[i];
+            int count = GetCollectedResourceCount(type);
+            int score = GetResourceScore(type);
+            
+            int itemX = inventoryStartX + (i * itemWidth);
+            int itemY = inventoryStartY;
+            
+            // Fondo del item
+            SolidBrush^ itemBrush = gcnew SolidBrush(Color::FromArgb(80, 100, 100, 100));
+            g->FillRectangle(itemBrush, itemX, itemY, itemWidth - 10, itemHeight - 10);
+            
+            // Icono del recurso
+            Bitmap^ iconoRecurso = nullptr;
+            String^ nombreRecurso = "";
+            
+            switch (type) {
+                case ResourceType::Empatia:
+                    iconoRecurso = iconoRecursoEmpatia;
+                    nombreRecurso = "Empatia";
+                    break;
+                case ResourceType::Etica:
+                    iconoRecurso = iconoRecursoSabiduria;
+                    nombreRecurso = "Etica";
+                    break;
+                case ResourceType::Sostenibilidad:
+                    iconoRecurso = iconoRecursoEsperanza;
+                    nombreRecurso = "Sostenibilidad";
+                    break;
+                case ResourceType::IA:
+                    iconoRecurso = iconoRecursoValor;
+                    nombreRecurso = "IA";
+                    break;
+                case ResourceType::BigData:
+                    iconoRecurso = iconoRecursoEquilibrio;
+                    nombreRecurso = "BigData";
+                    break;
+                case ResourceType::Automatizacion:
+                    iconoRecurso = iconoRecursoValor;
+                    nombreRecurso = "Automatizacion";
+                    break;
+            }
+            
+            if (iconoRecurso != nullptr) {
+                g->DrawImage(iconoRecurso, itemX + 5, itemY + 5, 20, 20);
+            }
+            
+            // Texto del recurso
+            g->DrawString(nombreRecurso, inventoryFont, inventoryTextBrush, itemX + 30, itemY + 5);
+            g->DrawString("Cant: " + count, inventoryFont, inventoryTextBrush, itemX + 5, itemY + 25);
+            g->DrawString("Pts: " + score, inventoryFont, inventoryTextBrush, itemX + 5, itemY + 45);
+            
+            delete itemBrush;
+        }
+        
+        // Limpiar recursos
         delete hudBrush;
+        delete inventoryBrush;
         delete hudFont;
+        delete inventoryFont;
         delete textBrush;
+        delete inventoryTextBrush;
     }
     
     void DrawGameOver(Graphics^ g) {
@@ -1344,13 +1532,10 @@ public:
                 
             case GameState::Victory:
                 if (key == Keys::Enter) {
-                    // Solicitar nombre para ranking
-                    String^ name = Microsoft::VisualBasic::Interaction::InputBox(
-                        "Ingresa tu nombre:", "¡Felicitaciones!", "Jugador");
-                    if (name != "") {
-                        ranking->Add(gcnew ScoreEntry(name, puntuacion));
-                        SaveRanking();
-                    }
+                    // Solicitar nombre para ranking (usar nombre por defecto)
+                    String^ name = "Jugador";
+                    ranking->Add(gcnew ScoreEntry(name, puntuacion));
+                    SaveRanking();
                     currentState = GameState::Ranking;
                 }
                 break;

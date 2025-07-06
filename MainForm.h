@@ -1,4 +1,5 @@
 #pragma once
+#include "stdafx.h"
 #include "GameManager.h"
 
 namespace VigilanteDelEquilibrio {
@@ -7,7 +8,6 @@ namespace VigilanteDelEquilibrio {
     using namespace System::ComponentModel;
     using namespace System::Collections;
     using namespace System::Windows::Forms;
-    using namespace System::Data;
     using namespace System::Drawing;
 
     public ref class MainForm : public System::Windows::Forms::Form
