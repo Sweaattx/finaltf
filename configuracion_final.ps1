@@ -1,0 +1,40 @@
+Write-Host "=== CONFIGURACION FINAL: SPRITES NORMALES SIN PARPADEO ===" -ForegroundColor Green
+Write-Host ""
+
+Write-Host "CAMBIOS APLICADOS:" -ForegroundColor Yellow
+Write-Host "1. SPRITES CON TAMAÑO ORIGINAL:"
+Write-Host "   - Player: Usa dimensiones detectadas (48x72 por frame)"
+Write-Host "   - Enemigos: Usa dimensiones detectadas (64x64 por frame)"
+Write-Host "   - No mas tamaño artificial grande (32x32)"
+Write-Host "   - Sprites mantienen su apariencia original"
+Write-Host ""
+Write-Host "2. PARPADEO DESACTIVADO POR DEFECTO:"
+Write-Host "   - blinkingEnabled = false (desactivado al inicio)"
+Write-Host "   - El personaje NO parpadea cuando se acercan enemigos"
+Write-Host "   - Solo parpadea DESPUES de recibir daño real (si se activa)"
+Write-Host ""
+Write-Host "3. INVULNERABILIDAD MAS CORTA:"
+Write-Host "   - Reducida de 2 segundos a 1 segundo"
+Write-Host "   - Menos molesta cuando ocurre"
+Write-Host ""
+Write-Host "4. SIN PERIODO DE GRACIA:"
+Write-Host "   - El player empieza normal, puede recibir daño inmediatamente"
+Write-Host "   - No hay parpadeo inicial molesto"
+Write-Host ""
+Write-Host "5. DIALOGOS DE DEBUG DESACTIVADOS:"
+Write-Host "   - No mas mensajes de dimensiones al cargar"
+Write-Host "   - Funcionamiento silencioso"
+Write-Host ""
+
+Write-Host "CONTROLES:" -ForegroundColor Cyan
+Write-Host "- F11: Activar/desactivar parpadeo (desactivado por defecto)"
+Write-Host "- F12: Activar/desactivar modo debug"
+Write-Host "- WASD o flechas: Mover personaje"
+Write-Host ""
+
+Write-Host "COMPORTAMIENTO FINAL:" -ForegroundColor Green
+Write-Host "- Sprites mantienen su tamaño original"
+Write-Host "- NO hay parpadeo cuando enemigos se acercan"
+Write-Host "- Solo parpadea 1 segundo despues de recibir daño (si esta activado)"
+Write-Host "- Experiencia visual limpia y sin distracciones"
+Write-Host "- Parpadeo completamente opcional"
